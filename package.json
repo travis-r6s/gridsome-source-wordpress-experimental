@@ -8,11 +8,13 @@
   "license": "MIT",
   "scripts": {
     "develop": "rollup -c --watch",
-    "build": "rollup -c",
-    "prepublish": "rollup -c"
+    "build": "rollup -c"
   },
   "devDependencies": {
     "eslint-config-travisreynolds-node": "^1.1.8",
     "rollup": "^2.18.2"
+  },
+  "dependencies": {
+    "got": "^11.4.0"
   }
 }
