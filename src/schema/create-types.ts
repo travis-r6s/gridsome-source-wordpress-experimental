@@ -1,8 +1,7 @@
 import { isInterfaceType, isEnumType, isObjectType, isUnionType, GraphQLSchema } from 'graphql'
 import { SchemaUtils } from '.'
 import { reporter } from '../utils'
-import { transformEnums } from './transform-schema'
-import { TypeBuilder } from './type-builder'
+import { TypeBuilder, transformEnums } from './type-builder'
 
 export const createSchemaTypes = async (schema: GraphQLSchema, data: any, actions: any, { typeName }: SchemaUtils) => {
   try {

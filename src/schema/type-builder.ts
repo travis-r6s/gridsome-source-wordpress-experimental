@@ -34,6 +34,26 @@ export const transformFields = (type: GraphQLObjectType | GraphQLInterfaceType) 
   return Object.fromEntries(transformed)
 }
 
+export const transformEnums = (enums: any, actions: any) => {
+  // Enums don't seem to be included in the type map
+  const discardEnums = ['__DirectiveLocation', '__TypeKind']
+  return enums
+    .filter(({ name }: { name: string }) => !discardEnums.includes(name))
+    .map((type: any) => {
+      const values = Object.fromEntries(
+        type.enumValues.map(({ name, value, deprecationReason, description }: { name: string; value: string; deprecationReason: string; description: string }) => [
+          name,
+          { value, deprecationReason, description }
+        ])
+      )
+      return actions.schema.createEnumType({
+        name: type.name,
+        description: type.description,
+        values
+      })
+    })
+}
+
 export const TypeBuilder = (schema: any) => ({
   interface: (type: GraphQLInterfaceType) => {
     const fields = transformFields(type)

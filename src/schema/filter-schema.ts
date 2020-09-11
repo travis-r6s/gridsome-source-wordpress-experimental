@@ -3,7 +3,7 @@ import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
 import { SchemaUtils } from '.'
 import { excludedTypes } from './type-builder'
 
-export const transformSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) =>
+export const filterSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) =>
   visitSchema(schema, {
     [VisitSchemaKind.MUTATION]() {
       return null
@@ -27,23 +27,3 @@ export const transformSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) 
       return renameType(type, prefix(type.name))
     }
   })
-
-export const transformEnums = (enums: any, actions: any) => {
-  // Enums don't seem to be included in the type map
-  const discardEnums = ['__DirectiveLocation', '__TypeKind']
-  return enums
-    .filter(({ name }: { name: string }) => !discardEnums.includes(name))
-    .map((type: any) => {
-      const values = Object.fromEntries(
-        type.enumValues.map(({ name, value, deprecationReason, description }: { name: string; value: string; deprecationReason: string; description: string }) => [
-          name,
-          { value, deprecationReason, description }
-        ])
-      )
-      return actions.schema.createEnumType({
-        name: type.name,
-        description: type.description,
-        values
-      })
-    })
-}

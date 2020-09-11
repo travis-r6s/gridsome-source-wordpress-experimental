@@ -2,7 +2,7 @@ import { GraphQLAbstractType, GraphQLSchema } from 'graphql'
 import { createSchemaTypes } from './create-types'
 import { fetchSchema } from './fetch-schema'
 import { renameType } from 'graphql-tools'
-import { transformSchema } from './transform-schema'
+import { filterSchema } from './filter-schema'
 
 export interface SchemaUtils {
   baseUrl: string
@@ -14,7 +14,7 @@ export const createSchema = async (actions: any, utils: SchemaUtils): Promise<Gr
   const { baseUrl, prefix } = utils
 
   const { schema, data } = await fetchSchema(baseUrl)
-  const transformedSchema = transformSchema(schema, utils)
+  const transformedSchema = filterSchema(schema, utils)
 
   const schemaTypes = await createSchemaTypes(transformedSchema, data, actions, utils)
   actions.addSchemaTypes(schemaTypes)
