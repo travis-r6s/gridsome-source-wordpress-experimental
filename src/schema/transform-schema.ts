@@ -16,7 +16,7 @@ export const transformSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) 
       return renameType(type, prefix(type.name))
     },
     [VisitSchemaKind.INTERFACE_TYPE](type) {
-      if (excludedTypes.some(str => type.name.includes(str))) return null
+      if (excludedTypes.includes(type.name)) return null
       if (type.name !== 'Node') return renameType(type, prefix(type.name))
       return type
     },

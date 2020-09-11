@@ -1,6 +1,6 @@
 import { getNamedType, getNullableType, GraphQLEnumType, GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType, isObjectType } from 'graphql'
 
-export const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'Enqueued']
+export const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'EnqueuedStylesheet']
 
 export const transformFields = (type: GraphQLObjectType | GraphQLInterfaceType) => {
   const fields = type.getFields()
