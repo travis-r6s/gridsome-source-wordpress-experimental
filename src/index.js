@@ -67,6 +67,9 @@ export default (api, config) => {
       [ VisitSchemaKind.INTERFACE_TYPE ] (type) {
         if (excludedTypes.some(str => type.name.includes(str))) return null
         return renameType(type, prefix(type.name))
+      },
+      [ VisitSchemaKind.UNION_TYPE ] (type) {
+        return renameType(type, prefix(type.name))
       }
     })
 
