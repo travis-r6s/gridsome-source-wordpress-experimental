@@ -26,7 +26,7 @@ interface SourceOptions {
   baseUrl: string
 }
 
-export default (api: any, config: SourceOptions) => {
+const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
   const {typeName = 'WordPress', baseUrl = ''} = config
 
   const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'Enqueued']
@@ -186,3 +186,5 @@ export default (api: any, config: SourceOptions) => {
     reporter.success('Finished adding WordPress schema')
   })
 }
+
+module.exports = GridsomeSourceWordPress
