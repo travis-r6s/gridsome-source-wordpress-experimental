@@ -121,7 +121,7 @@ export default (api, config) => {
 
     actions.addSchemaTypes(schemaTypes)
 
-    // Enums - don;t seem to be inlcuded in the type map
+    // Enums don't seem to be included in the type map
     const discardEnums = ['__DirectiveLocation', '__TypeKind']
     const enumTypes = data.__schema.types.filter(({ kind, name }) => kind === 'ENUM' && !discardEnums.includes(name)).map(type => {
       const values = Object.fromEntries(type.enumValues.map(({ name, value, deprecationReason, description }) => [name, { value, deprecationReason, description }]))
