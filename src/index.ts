@@ -15,19 +15,20 @@ import {
   GraphQLEnumType,
   GraphQLAbstractType
 } from 'graphql'
-import {visitSchema, VisitSchemaKind, renameType} from 'graphql-tools'
+import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
 // import { graphqlQueryBuilder as queryBuilder } from '@wheelroom/graphql-query-builder'
 import consola from 'consola'
 
-const reporter = consola.create({defaults: {tag: 'gridsome-source-wordpress-experimental'}})
+const reporter = consola.create({ defaults: { tag: 'gridsome-source-wordpress-experimental' } })
 
 interface SourceOptions {
   typeName: string
   baseUrl: string
+  log: boolean
 }
 
 const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
-  const {typeName = 'WordPress', baseUrl = ''} = config
+  const { typeName = 'WordPress', baseUrl = '', log = false } = config
 
   const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'Enqueued']
 
@@ -62,27 +63,28 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
             }
           ]
         })
-        .filter(f => f) as [string, {type: string; description: string; deprecationReason: string}][]
+        .filter(f => f) as [string, { type: string; description: string; deprecationReason: string }][]
 
       return Object.fromEntries(transformed)
     }
 
-    reporter.log('Fetching schema')
-    const {data, errors} = await got.post(baseUrl, {
-      json: {query: getIntrospectionQuery()},
+    if (log) reporter.log('Fetching schema')
+    const { data, errors } = await got.post(baseUrl, {
+      json: { query: getIntrospectionQuery() },
       resolveBodyOnly: true,
       responseType: 'json'
     })
 
     if (errors) {
-      errors.forEach(({message}: {message: string}) => reporter.error(message))
+      errors.forEach(({ message }: { message: string }) => reporter.error(message))
     }
     if (!data) {
       return reporter.error('No data - cancelling operation.')
     }
 
     // Schema
-    reporter.log('Building schema')
+    if (log) reporter.log('Building schema')
+
     const schema = buildClientSchema(data)
 
     const transformed = visitSchema(schema, {
@@ -157,12 +159,12 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     // Enums don't seem to be included in the type map
     const discardEnums = ['__DirectiveLocation', '__TypeKind']
     const enumTypes = data.__schema.types
-      .filter(({kind, name}: {kind: string; name: string}) => kind === 'ENUM' && !discardEnums.includes(name))
+      .filter(({ kind, name }: { kind: string; name: string }) => kind === 'ENUM' && !discardEnums.includes(name))
       .map((type: any) => {
         const values = Object.fromEntries(
-          type.enumValues.map(({name, value, deprecationReason, description}: {name: string; value: string; deprecationReason: string; description: string}) => [
+          type.enumValues.map(({ name, value, deprecationReason, description }: { name: string; value: string; deprecationReason: string; description: string }) => [
             name,
-            {value, deprecationReason, description}
+            { value, deprecationReason, description }
           ])
         )
         return actions.schema.createEnumType({
@@ -174,7 +176,7 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
 
     actions.addSchemaTypes(enumTypes)
 
-    reporter.log('Adding Store collections')
+    if (log) reporter.log('Adding Store collections')
     const nodeType = schema.getType('Node') as GraphQLAbstractType
     const possibleTypes = schema.getPossibleTypes(nodeType)
     const collections = possibleTypes.map(type => renameType(type, prefix(type.name))).map(type => type.name)
@@ -183,7 +185,7 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
       actions.addCollection(type)
     }
 
-    reporter.success('Finished adding WordPress schema')
+    if (log) reporter.success('Finished adding WordPress schema')
   })
 }
 
