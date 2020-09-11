@@ -1,10 +1,10 @@
 // Packages
 import got from 'got'
-import { getIntrospectionQuery, buildClientSchema, isObjectType, getNamedType, getNullableType, printSchema, isUnionType, isEnumType, isInterfaceType } from 'graphql'
+import { getIntrospectionQuery, buildClientSchema, getNamedType, getNullableType, isObjectType, isUnionType, isEnumType, isInterfaceType } from 'graphql'
 import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
 // import { graphqlQueryBuilder as queryBuilder } from '@wheelroom/graphql-query-builder'
 import consola from 'consola'
-import fs from 'fs'
+
 const reporter = consola.create({ defaults: { tag: 'gridsome-source-wordpress-experimental' } })
 
 export default (api, config) => {
