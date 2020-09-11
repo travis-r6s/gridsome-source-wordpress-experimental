@@ -41,6 +41,7 @@ export default (api, config) => {
       }).filter(f => f)
     }
 
+    reporter.log('Fetching schema')
     const { data, errors } = await got.post(baseUrl, {
       json: { query: getIntrospectionQuery() },
       resolveBodyOnly: true,
@@ -55,6 +56,7 @@ export default (api, config) => {
     }
 
     // Schema
+    reporter.log('Building schema')
     const schema = buildClientSchema(data)
 
     const transformed = visitSchema(schema, {
@@ -134,6 +136,7 @@ export default (api, config) => {
 
     actions.addSchemaTypes(enumTypes.map(type => actions.schema.createEnumType(type)))
 
+    reporter.log('Adding Store collections')
     const nodeType = schema.getType('Node')
     const possibleTypes = schema.getPossibleTypes(nodeType)
     const collections = possibleTypes.map(type => renameType(type, prefix(type.name))).map(type => type.name)
