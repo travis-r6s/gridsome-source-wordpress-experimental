@@ -4,5 +4,6 @@ export default {
     file: 'lib/index.js',
     format: 'cjs',
     exports: 'default'
-  }
+  },
+  external: ['got', 'graphql', 'graphql-tools', 'consola']
 }
