@@ -1,7 +1,8 @@
 export default {
   input: 'src/index.js',
   output: {
-    file: 'lib/gridsome.server.js',
-    format: 'cjs'
+    file: 'lib/index.js',
+    format: 'cjs',
+    exports: 'default'
   }
 }

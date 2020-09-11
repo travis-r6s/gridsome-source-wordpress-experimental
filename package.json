@@ -2,7 +2,7 @@
   "name": "gridsome-source-wordpress-experimental",
   "version": "0.1.0",
   "description": "Experimental source plugin for WordPress, using the WPGraphQL plugin. Inspired by the Gatsby equivalent.",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "repository": "git@github.com:thetre97/gridsome-source-wordpress-experimental.git",
   "author": "Travis Reynolds <travis@travisreynolds.dev>",
   "license": "MIT",
@@ -11,10 +11,18 @@
     "build": "rollup -c"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^6.0.0",
     "eslint-config-travisreynolds-node": "^1.1.8",
-    "rollup": "^2.18.2"
+    "rollup": "^2.23.0",
+    "tslib": "^2.0.1",
+    "typescript": "^4.0.2"
   },
   "dependencies": {
-    "got": "^11.4.0"
+    "@graphql-tools/utils": "^6.0.15",
+    "@wheelroom/graphql-query-builder": "^1.4.6",
+    "consola": "^2.14.0",
+    "got": "^11.5.1",
+    "graphql": "^15.3.0",
+    "graphql-tools": "^6.0.15"
   }
 }
