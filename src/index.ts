@@ -1,24 +1,29 @@
 // Packages
 import got from 'got'
-import { getIntrospectionQuery, buildClientSchema, getNamedType, getNullableType, isObjectType, isUnionType, isEnumType, isInterfaceType } from 'graphql'
+import { getIntrospectionQuery, buildClientSchema, getNamedType, getNullableType, isObjectType, isUnionType, isEnumType, isInterfaceType, GraphQLObjectType, GraphQLInterfaceType, GraphQLUnionType, GraphQLEnumType, GraphQLAbstractType } from 'graphql'
 import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
 // import { graphqlQueryBuilder as queryBuilder } from '@wheelroom/graphql-query-builder'
 import consola from 'consola'
 
 const reporter = consola.create({ defaults: { tag: 'gridsome-source-wordpress-experimental' } })
 
-export default (api, config) => {
+interface SourceOptions {
+  typeName: string
+  baseUrl: string
+}
+
+export default (api: any, config: SourceOptions) => {
   const { typeName = 'WordPress', baseUrl = '' } = config
 
   const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'Enqueued']
 
-  api.loadSource(async actions => {
+  api.loadSource(async (actions: any) => {
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
-    const prefix = name => scalarTypes.includes(name) ? name : `${typeName}${name}`
+    const prefix = (name: string) => scalarTypes.includes(name) ? name : `${typeName}${name}`
 
-    const transformFields = type => {
+    const transformFields = (type: GraphQLObjectType | GraphQLInterfaceType) => {
       const fields = type.getFields()
-      return Object.entries(fields).map(([key, field]) => {
+      const transformed = Object.entries(fields).map(([key, field]) => {
         const strippedName = getNamedType(field.type).toString()
         if (excludedTypes.some(type => strippedName.includes(type))) return
 
@@ -38,7 +43,9 @@ export default (api, config) => {
           description: field.description,
           deprecationReason: field.deprecationReason
         }]
-      }).filter(f => f)
+      }).filter(f => f) as [string, { type: string, description: string, deprecationReason: string }][]
+
+      return Object.fromEntries(transformed)
     }
 
     reporter.log('Fetching schema')
@@ -49,7 +56,7 @@ export default (api, config) => {
     })
 
     if (errors) {
-      errors.forEach(({ message }) => reporter.error(message))
+      errors.forEach(({ message }: { message: string }) => reporter.error(message))
     }
     if (!data) {
       return reporter.error('No data - cancelling operation.')
@@ -69,6 +76,7 @@ export default (api, config) => {
       [ VisitSchemaKind.INTERFACE_TYPE ] (type) {
         if (excludedTypes.some(str => type.name.includes(str))) return null
         if (type.name !== 'Node') return renameType(type, prefix(type.name))
+        return type
       },
       [ VisitSchemaKind.UNION_TYPE ] (type) {
         return renameType(type, prefix(type.name))
@@ -81,16 +89,16 @@ export default (api, config) => {
     const typeMap = transformed.getTypeMap()
     const allTypes = Object.values(typeMap).filter(type => type.name.startsWith(typeName) && !type.name.includes('Root') && !type.name.includes('Connection'))
 
-    const TypeBuilder = schema => ({
-      interface: type => {
+    const TypeBuilder = (schema: any) => ({
+      interface: (type: GraphQLInterfaceType) => {
         const fields = transformFields(type)
         return schema.createInterfaceType({
           name: type.name,
           description: type.description,
-          fields: Object.fromEntries(fields)
+          fields
         })
       },
-      union: type => {
+      union: (type: GraphQLUnionType) => {
         const types = type.getTypes().map(type => type.name)
         return schema.createUnionType({
           name: type.name,
@@ -98,17 +106,17 @@ export default (api, config) => {
           types
         })
       },
-      enum: type => {
+      enum: (_type: GraphQLEnumType) => {
         // We don't seem to get any enum types here - further research required...
       },
-      object: type => {
+      object: (type: GraphQLObjectType) => {
         const fields = transformFields(type)
         const interfaces = type.getInterfaces().map(type => type.name)
         return schema.createObjectType({
+          fields,
           interfaces,
           name: type.name,
           description: type.description,
-          fields: Object.fromEntries(fields)
         })
       }
     })
@@ -125,19 +133,19 @@ export default (api, config) => {
 
     // Enums don't seem to be included in the type map
     const discardEnums = ['__DirectiveLocation', '__TypeKind']
-    const enumTypes = data.__schema.types.filter(({ kind, name }) => kind === 'ENUM' && !discardEnums.includes(name)).map(type => {
-      const values = Object.fromEntries(type.enumValues.map(({ name, value, deprecationReason, description }) => [name, { value, deprecationReason, description }]))
-      return {
+    const enumTypes = data.__schema.types.filter(({ kind, name }: { kind: string, name: string }) => kind === 'ENUM' && !discardEnums.includes(name)).map((type: any) => {
+      const values = Object.fromEntries(type.enumValues.map(({ name, value, deprecationReason, description }: { name: string, value: string, deprecationReason: string, description: string }) => [name, { value, deprecationReason, description }]))
+      return actions.schema.createEnumType({
         name: type.name,
         description: type.description,
         values
-      }
+      })
     })
 
-    actions.addSchemaTypes(enumTypes.map(type => actions.schema.createEnumType(type)))
+    actions.addSchemaTypes(enumTypes)
 
     reporter.log('Adding Store collections')
-    const nodeType = schema.getType('Node')
+    const nodeType = schema.getType('Node') as GraphQLAbstractType
     const possibleTypes = schema.getPossibleTypes(nodeType)
     const collections = possibleTypes.map(type => renameType(type, prefix(type.name))).map(type => type.name)
 

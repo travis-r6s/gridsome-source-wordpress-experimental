@@ -1,3 +1,3 @@
 module.exports = {
-  extends: ['travisreynolds-node']
+  extends: ['travisreynolds-node-ts']
 }

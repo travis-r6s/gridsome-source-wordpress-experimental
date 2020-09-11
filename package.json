@@ -2,27 +2,41 @@
   "name": "gridsome-source-wordpress-experimental",
   "version": "0.1.0",
   "description": "Experimental source plugin for WordPress, using the WPGraphQL plugin. Inspired by the Gatsby equivalent.",
-  "main": "lib/index.js",
   "repository": "git@github.com:thetre97/gridsome-source-wordpress-experimental.git",
   "author": "Travis Reynolds <travis@travisreynolds.dev>",
   "license": "MIT",
-  "scripts": {
-    "develop": "rollup -c --watch",
-    "build": "rollup -c"
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=12"
   },
-  "devDependencies": {
-    "@rollup/plugin-typescript": "^6.0.0",
-    "eslint-config-travisreynolds-node": "^1.1.8",
-    "rollup": "^2.23.0",
-    "tslib": "^2.0.1",
-    "typescript": "^4.0.2"
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build --target node --format cjs",
+    "test": "tsdx test",
+    "lint": "tsdx lint --fix",
+    "prepare": "yarn build"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
   },
   "dependencies": {
-    "@graphql-tools/utils": "^6.0.15",
-    "@wheelroom/graphql-query-builder": "^1.4.6",
-    "consola": "^2.14.0",
-    "got": "^11.5.1",
+    "consola": "^2.15.0",
+    "got": "^11.6.2",
     "graphql": "^15.3.0",
-    "graphql-tools": "^6.0.15"
+    "graphql-tools": "^6.2.1"
+  },
+  "devDependencies": {
+    "eslint-config-travisreynolds-node-ts": "^1.1.6",
+    "husky": "^4.3.0",
+    "tsdx": "^0.13.3",
+    "tslib": "^2.0.1",
+    "typescript": "^4.0.2"
   }
 }
