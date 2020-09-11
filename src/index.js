@@ -33,13 +33,6 @@ export default (api, config) => {
           }
         }
 
-        if (isListType(type)) {
-          const namedType = getNamedType(type)
-          type = `[${renameType(namedType, prefix(namedType.toString()))}]`
-        } else if (!isScalarType(type)) {
-          type = renameType(type, prefix(type.toString()))
-        }
-
         return [key, {
           type: type.toString(),
           description: field.description,
@@ -104,16 +97,7 @@ export default (api, config) => {
     const nodeTypes = possibleTypes.map(type => {
       const fields = transformFields(type.getFields())
 
-      const interfaces = type.getInterfaces().map(type => {
-        if (isListType(type)) {
-          const namedType = getNamedType(type)
-          return `[${prefix(namedType.name)}]`
-        } else if (!isScalarType(type)) {
-          return prefix(type.name)
-        } else {
-          return type.toString()
-        }
-      })
+      const interfaces = type.getInterfaces()
 
       const schemaObject = actions.schema.createObjectType({
         name: type.name,
