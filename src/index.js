@@ -1,11 +1,10 @@
 // Packages
 import got from 'got'
-import { getIntrospectionQuery, buildClientSchema, isObjectType, isListType, getNamedType, getNullableType, isScalarType } from 'graphql'
+import { getIntrospectionQuery, buildClientSchema, isObjectType, getNamedType, getNullableType, printSchema, isUnionType, isEnumType, isInterfaceType } from 'graphql'
 import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
 // import { graphqlQueryBuilder as queryBuilder } from '@wheelroom/graphql-query-builder'
 import consola from 'consola'
-import { transform } from 'typescript'
-
+import fs from 'fs'
 const reporter = consola.create({ defaults: { tag: 'gridsome-source-wordpress-experimental' } })
 
 export default (api, config) => {
@@ -17,8 +16,9 @@ export default (api, config) => {
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
     const prefix = name => scalarTypes.includes(name) ? name : `${typeName}${name}`
 
-    const transformFields = typeFields => {
-      return Object.entries(typeFields).map(([key, field]) => {
+    const transformFields = type => {
+      const fields = type.getFields()
+      return Object.entries(fields).map(([key, field]) => {
         const strippedName = getNamedType(field.type).toString()
         if (excludedTypes.some(type => strippedName.includes(type))) return
 
@@ -66,65 +66,67 @@ export default (api, config) => {
       },
       [ VisitSchemaKind.INTERFACE_TYPE ] (type) {
         if (excludedTypes.some(str => type.name.includes(str))) return null
-        return renameType(type, prefix(type.name))
+        if (type.name !== 'Node') return renameType(type, prefix(type.name))
       },
       [ VisitSchemaKind.UNION_TYPE ] (type) {
+        return renameType(type, prefix(type.name))
+      },
+      [ VisitSchemaKind.ENUM_TYPE ] (type) {
         return renameType(type, prefix(type.name))
       }
     })
 
-    // Interfaces
-    const interfaces = data.__schema.types
-      .filter(({ kind, name }) => kind === 'INTERFACE' && name !== 'Node' && !excludedTypes.some(str => name.includes(str)))
-      .map(({ name }) => {
-        const type = transformed.getType(prefix(name))
-        const fields = transformFields(type.getFields())
-        const schemaInterface = actions.schema.createInterfaceType({
+    const typeMap = transformed.getTypeMap()
+    const allTypes = Object.values(typeMap).filter(type => type.name.startsWith(typeName) && !type.name.includes('Root') && !type.name.includes('Connection'))
+
+    const TypeBuilder = schema => ({
+      interface: type => {
+        const fields = transformFields(type)
+        return schema.createInterfaceType({
           name: type.name,
           description: type.description,
           fields: Object.fromEntries(fields)
         })
-
-        return {
+      },
+      union: type => {
+        const types = type.getTypes().map(type => type.name)
+        return schema.createUnionType({
           name: type.name,
-          schemaInterface
-        }
-      })
-
-    actions.addSchemaTypes(interfaces.map(type => type.schemaInterface))
-    console.log('Added interfaces')
-    // Nodes
-    const nodeInterface = transformed.getType('WordPressNode')
-    const possibleTypes = transformed.getPossibleTypes(nodeInterface)
-
-    const nodeTypes = possibleTypes.map(type => {
-      const fields = transformFields(type.getFields())
-
-      const interfaces = type.getInterfaces()
-
-      const schemaObject = actions.schema.createObjectType({
-        name: type.name,
-        interfaces: ['Node', ...interfaces],
-        description: type.description,
-        fields: Object.fromEntries(fields)
-      })
-
-      return { name: type.name, schemaObject }
+          description: type.description,
+          types
+        })
+      },
+      enum: type => {
+        console.log(type)
+      },
+      object: type => {
+        const fields = transformFields(type)
+        const interfaces = type.getInterfaces().map(type => type.name)
+        return schema.createObjectType({
+          interfaces,
+          name: type.name,
+          description: type.description,
+          fields: Object.fromEntries(fields)
+        })
+      }
     })
 
-    actions.addSchemaTypes(nodeTypes.map(type => type.schemaObject))
+    const buildType = TypeBuilder(actions.schema)
+    const schemaTypes = allTypes.map(type => {
+      if (isInterfaceType(type)) return buildType.interface(type)
+      if (isEnumType(type)) return buildType.enum(type)
+      if (isObjectType(type)) return buildType.object(type)
+      if (isUnionType(type)) return buildType.union(type)
+    })
 
-    for (const { name, schemaObject } of nodeTypes) {
-      // if (name === 'WordPressCoupon') console.log(schemaObject.options.fields)
-      actions.addCollection(name)
-    }
+    actions.addSchemaTypes(schemaTypes)
 
-    // Enums
+    // Enums - don;t seem to be inlcuded in the type map
     const discardEnums = ['__DirectiveLocation', '__TypeKind']
     const enumTypes = data.__schema.types.filter(({ kind, name }) => kind === 'ENUM' && !discardEnums.includes(name)).map(type => {
       const values = Object.fromEntries(type.enumValues.map(({ name, value, deprecationReason, description }) => [name, { value, deprecationReason, description }]))
       return {
-        name: prefix(type.name),
+        name: type.name,
         description: type.description,
         values
       }
@@ -132,6 +134,14 @@ export default (api, config) => {
 
     actions.addSchemaTypes(enumTypes.map(type => actions.schema.createEnumType(type)))
 
-    reporter.success('Finished')
+    const nodeType = schema.getType('Node')
+    const possibleTypes = schema.getPossibleTypes(nodeType)
+    const collections = possibleTypes.map(type => renameType(type, prefix(type.name))).map(type => type.name)
+
+    for (const type of collections) {
+      actions.addCollection(type)
+    }
+
+    reporter.success('Finished adding WordPress schema')
   })
 }
