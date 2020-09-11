@@ -97,7 +97,7 @@ export default (api, config) => {
         })
       },
       enum: type => {
-        console.log(type)
+        // We don't seem to get any enum types here - further research required...
       },
       object: type => {
         const fields = transformFields(type)
