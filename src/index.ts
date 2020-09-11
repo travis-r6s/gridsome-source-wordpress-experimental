@@ -1,11 +1,25 @@
 // Packages
 import got from 'got'
-import { getIntrospectionQuery, buildClientSchema, getNamedType, getNullableType, isObjectType, isUnionType, isEnumType, isInterfaceType, GraphQLObjectType, GraphQLInterfaceType, GraphQLUnionType, GraphQLEnumType, GraphQLAbstractType } from 'graphql'
-import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
+import {
+  getIntrospectionQuery,
+  buildClientSchema,
+  getNamedType,
+  getNullableType,
+  isObjectType,
+  isUnionType,
+  isEnumType,
+  isInterfaceType,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
+  GraphQLUnionType,
+  GraphQLEnumType,
+  GraphQLAbstractType
+} from 'graphql'
+import {visitSchema, VisitSchemaKind, renameType} from 'graphql-tools'
 // import { graphqlQueryBuilder as queryBuilder } from '@wheelroom/graphql-query-builder'
 import consola from 'consola'
 
-const reporter = consola.create({ defaults: { tag: 'gridsome-source-wordpress-experimental' } })
+const reporter = consola.create({defaults: {tag: 'gridsome-source-wordpress-experimental'}})
 
 interface SourceOptions {
   typeName: string
@@ -13,50 +27,55 @@ interface SourceOptions {
 }
 
 export default (api: any, config: SourceOptions) => {
-  const { typeName = 'WordPress', baseUrl = '' } = config
+  const {typeName = 'WordPress', baseUrl = ''} = config
 
   const excludedTypes = ['Theme', 'Script', 'Stylesheet', 'Payload', 'Asset', 'Enqueued']
 
   api.loadSource(async (actions: any) => {
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
-    const prefix = (name: string) => scalarTypes.includes(name) ? name : `${typeName}${name}`
+    const prefix = (name: string) => (scalarTypes.includes(name) ? name : `${typeName}${name}`)
 
     const transformFields = (type: GraphQLObjectType | GraphQLInterfaceType) => {
       const fields = type.getFields()
-      const transformed = Object.entries(fields).map(([key, field]) => {
-        const strippedName = getNamedType(field.type).toString()
-        if (excludedTypes.some(type => strippedName.includes(type))) return
+      const transformed = Object.entries(fields)
+        .map(([key, field]) => {
+          const strippedName = getNamedType(field.type).toString()
+          if (excludedTypes.some(type => strippedName.includes(type))) return
 
-        let type = getNullableType(field.type)
+          let type = getNullableType(field.type)
 
-        // Get root node type of connections or edges
-        if (isObjectType(type)) {
-          if (type.name.includes('Connection')) {
-            const subTypes = type.getFields()
-            if (type.name.includes('Edge')) type = subTypes.node.type
-            else type = subTypes.nodes.type
+          // Get root node type of connections or edges
+          if (isObjectType(type)) {
+            if (type.name.includes('Connection')) {
+              const subTypes = type.getFields()
+              if (type.name.includes('Edge')) type = subTypes.node.type
+              else type = subTypes.nodes.type
+            }
           }
-        }
 
-        return [key, {
-          type: type.toString(),
-          description: field.description,
-          deprecationReason: field.deprecationReason
-        }]
-      }).filter(f => f) as [string, { type: string, description: string, deprecationReason: string }][]
+          return [
+            key,
+            {
+              type: type.toString(),
+              description: field.description,
+              deprecationReason: field.deprecationReason
+            }
+          ]
+        })
+        .filter(f => f) as [string, {type: string; description: string; deprecationReason: string}][]
 
       return Object.fromEntries(transformed)
     }
 
     reporter.log('Fetching schema')
-    const { data, errors } = await got.post(baseUrl, {
-      json: { query: getIntrospectionQuery() },
+    const {data, errors} = await got.post(baseUrl, {
+      json: {query: getIntrospectionQuery()},
       resolveBodyOnly: true,
       responseType: 'json'
     })
 
     if (errors) {
-      errors.forEach(({ message }: { message: string }) => reporter.error(message))
+      errors.forEach(({message}: {message: string}) => reporter.error(message))
     }
     if (!data) {
       return reporter.error('No data - cancelling operation.')
@@ -67,21 +86,25 @@ export default (api: any, config: SourceOptions) => {
     const schema = buildClientSchema(data)
 
     const transformed = visitSchema(schema, {
-      [ VisitSchemaKind.MUTATION ] () { return null },
-      [ VisitSchemaKind.INPUT_OBJECT_TYPE ] () { return null },
-      [ VisitSchemaKind.OBJECT_TYPE ] (type) {
+      [VisitSchemaKind.MUTATION]() {
+        return null
+      },
+      [VisitSchemaKind.INPUT_OBJECT_TYPE]() {
+        return null
+      },
+      [VisitSchemaKind.OBJECT_TYPE](type) {
         if (excludedTypes.some(str => type.name.includes(str))) return null
         return renameType(type, prefix(type.name))
       },
-      [ VisitSchemaKind.INTERFACE_TYPE ] (type) {
+      [VisitSchemaKind.INTERFACE_TYPE](type) {
         if (excludedTypes.some(str => type.name.includes(str))) return null
         if (type.name !== 'Node') return renameType(type, prefix(type.name))
         return type
       },
-      [ VisitSchemaKind.UNION_TYPE ] (type) {
+      [VisitSchemaKind.UNION_TYPE](type) {
         return renameType(type, prefix(type.name))
       },
-      [ VisitSchemaKind.ENUM_TYPE ] (type) {
+      [VisitSchemaKind.ENUM_TYPE](type) {
         return renameType(type, prefix(type.name))
       }
     })
@@ -116,7 +139,7 @@ export default (api: any, config: SourceOptions) => {
           fields,
           interfaces,
           name: type.name,
-          description: type.description,
+          description: type.description
         })
       }
     })
@@ -133,14 +156,21 @@ export default (api: any, config: SourceOptions) => {
 
     // Enums don't seem to be included in the type map
     const discardEnums = ['__DirectiveLocation', '__TypeKind']
-    const enumTypes = data.__schema.types.filter(({ kind, name }: { kind: string, name: string }) => kind === 'ENUM' && !discardEnums.includes(name)).map((type: any) => {
-      const values = Object.fromEntries(type.enumValues.map(({ name, value, deprecationReason, description }: { name: string, value: string, deprecationReason: string, description: string }) => [name, { value, deprecationReason, description }]))
-      return actions.schema.createEnumType({
-        name: type.name,
-        description: type.description,
-        values
+    const enumTypes = data.__schema.types
+      .filter(({kind, name}: {kind: string; name: string}) => kind === 'ENUM' && !discardEnums.includes(name))
+      .map((type: any) => {
+        const values = Object.fromEntries(
+          type.enumValues.map(({name, value, deprecationReason, description}: {name: string; value: string; deprecationReason: string; description: string}) => [
+            name,
+            {value, deprecationReason, description}
+          ])
+        )
+        return actions.schema.createEnumType({
+          name: type.name,
+          description: type.description,
+          values
+        })
       })
-    })
 
     actions.addSchemaTypes(enumTypes)
 
