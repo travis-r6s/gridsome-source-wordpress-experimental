@@ -1697,6 +1697,11 @@
     "@typescript-eslint/types" "4.1.0"
     eslint-visitor-keys "^2.0.0"
 
+"@wheelroom/graphql-query-builder@^1.4.7":
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/@wheelroom/graphql-query-builder/-/graphql-query-builder-1.4.7.tgz#61ab9873d5ba219faf5344f29668b551c97a70cf"
+  integrity sha512-Anx3FkAtBTLxw/ath4BPOhXVn6vHBh8wpZ5DSZddjRhFQLEF/88qImAXtc8H9kVPb+CMsq2tSNwBQcgnjiL8IQ==
+
 "@wry/context@^0.5.2":
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/@wry/context/-/context-0.5.2.tgz#f2a5d5ab9227343aa74c81e06533c1ef84598ec7"
