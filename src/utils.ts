@@ -39,4 +39,5 @@ export const excludedFields = [
   'visibleProducts',
   'writingSettings'
 ]
+
 export const excludedTypes = ['EnqueuedScript', 'EnqueuedStylesheet', 'DownloadableItem']
