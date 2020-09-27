@@ -3,7 +3,13 @@ import pMap from 'p-map'
 import { reporter, Utils } from '../utils'
 import { FieldTransformParent } from './transform-fields'
 
-export const fetchData = async (queries: FieldTransformParent[], utils: Utils) => {
+export interface Data {
+  name: string
+  type: string
+  nodes: any[]
+}
+
+export const fetchData = async (queries: FieldTransformParent[], utils: Utils): Promise<Data[]> => {
   const data = await pMap(
     queries,
     async (field: FieldTransformParent) => {
@@ -73,6 +79,7 @@ export const fetchData = async (queries: FieldTransformParent[], utils: Utils) =
       })
 
       return {
+        name,
         type: utils.prefix(type),
         nodes: formattedNodes
       }
@@ -80,5 +87,5 @@ export const fetchData = async (queries: FieldTransformParent[], utils: Utils) =
     { concurrency: utils.concurrency }
   )
 
-  return data.filter(d => !!d)
+  return data.filter(d => !!d) as Data[]
 }

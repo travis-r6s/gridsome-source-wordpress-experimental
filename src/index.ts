@@ -2,12 +2,15 @@
 import { createSchema } from './schema'
 import { excludedFields, excludedTypes, reporter } from './utils'
 import { importData } from './data'
+import { contentActions } from './content'
 
-interface SourceOptions {
+export interface SourceOptions {
   typeName: string
   baseUrl: string
   log: boolean
   concurrency: number
+  images: boolean | { original: boolean; cache: boolean; folder: string }
+  content: boolean | { images: boolean; links: boolean }
 }
 
 const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
@@ -26,7 +29,9 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     try {
       const schema = await createSchema(actions, utils)
 
-      await importData(schema, actions, utils)
+      const data: Data = await importData(schema, actions, utils)
+
+      await contentActions(data, actions, { config, utils })
     } catch (error) {
       reporter.error(error.message)
     }

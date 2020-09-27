@@ -3,11 +3,11 @@ import { GraphQLSchema } from 'graphql'
 import { reporter, Utils } from '../utils'
 import { FieldTransformer } from './transform-fields'
 import { createQueries } from './create-queries'
-import { fetchData } from './fetch-data'
+import { Data, fetchData } from './fetch-data'
 
-export const importData = async (schema: GraphQLSchema, actions: any, utils: Utils) => {
+export const importData = async (schema: GraphQLSchema, actions: any, utils: Utils): Promise<Data[]> => {
   const queryFields = schema.getQueryType()?.getFields()
-  if (!queryFields) return
+  if (!queryFields) return []
 
   const fieldTransfomer = FieldTransformer(schema, utils)
 
@@ -24,4 +24,6 @@ export const importData = async (schema: GraphQLSchema, actions: any, utils: Uti
       collection.addNode(node)
     }
   }
+
+  return data
 }
