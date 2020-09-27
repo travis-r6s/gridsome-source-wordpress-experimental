@@ -34,7 +34,6 @@ export const excludedFields = [
   'revisions',
   'themes',
   'userRoles',
-  'users',
   'viewer',
   'visibleProducts',
   'writingSettings'
