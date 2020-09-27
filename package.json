@@ -35,7 +35,6 @@
     "p-map": "^4.0.0"
   },
   "devDependencies": {
-    "@tyankatsu0105/types-gridsome": "^0.6.0",
     "eslint-config-travisreynolds-node-ts": "^1.2.0",
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.3.0",
