@@ -24,8 +24,7 @@ export const transformFields = (type: GraphQLObjectType | GraphQLInterfaceType) 
         key,
         {
           type: type.toString(),
-          description: field.description,
-          deprecationReason: field.deprecationReason
+          description: field.description
         }
       ]
     })
@@ -60,6 +59,7 @@ export const TypeBuilder = (schema: any) => ({
     return schema.createInterfaceType({
       name: type.name,
       description: type.description,
+      interfaces: ['Node'],
       fields
     })
   },
