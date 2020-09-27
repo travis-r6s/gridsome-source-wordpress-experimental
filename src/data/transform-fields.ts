@@ -1,69 +1,87 @@
-import { Fields } from '@wheelroom/graphql-query-builder'
-import { GraphQLFieldMap, getNamedType, isScalarType, isObjectType, isInterfaceType } from 'graphql'
+import { Field } from '@wheelroom/graphql-query-builder'
+import { getNamedType, GraphQLObjectType, isObjectType, isInterfaceType, isScalarType, isTypeSubTypeOf, GraphQLSchema } from 'graphql'
+import { excludedTypes } from '../schema/type-builder'
+import { Utils } from '../utils'
 
-export const transformFields = (fields: GraphQLFieldMap<any, any>): Fields =>
-  Object.fromEntries(
-    Object.entries(fields).map(([name, field]) => {
-      console.log(name)
-      const namedType = getNamedType(field.type)
-      if (isScalarType(namedType)) return [name, {}]
+export const isConnectionField = (type: GraphQLObjectType) => Object.values(type.getFields()).find(({ name }) => name === 'nodes')
+export const isConnectionEdgeField = (type: GraphQLObjectType) => Object.values(type.getFields()).find(({ name }) => name === 'node')
+
+export interface FieldTransform {
+  name: string
+  type: string
+  fields: [string, Field]
+  path: string
+}
+
+export interface FieldTransformParent {
+  name: string
+  type: string
+  fields: Map<string, FieldTransform>
+  path: string
+  query: string
+}
+
+export declare type FieldTransformer = (type: GraphQLObjectType) => FieldTransform[]
+
+export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: GraphQLObjectType): FieldTransform[] =>
+  Object.values(type.getFields())
+    .map(field => {
+      if (utils.excluded.fields.includes(field.name)) return
+      const namedType = getNamedType(field.type) as GraphQLObjectType
+
+      if (isScalarType(namedType)) {
+        return {
+          name: field.name,
+          type: field.type.toString(),
+          fields: [field.name, {}],
+          path: ''
+        }
+      }
+
       if (isObjectType(namedType)) {
-        if (namedType.name.includes('ConnectionEdge')) {
-          return [
-            name,
-            {
-              fields: {
-                node: {
-                  fields: {
-                    id: {},
-                    __typename: {
-                      alias: 'typeName'
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-        if (namedType.name.includes('Connection')) {
-          return [
-            name,
-            {
-              fields: {
-                nodes: {
-                  fields: {
-                    id: {},
-                    __typename: {
-                      alias: 'typeName'
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-        return [
-          name,
-          {
-            fields: {
-              some: {}
-            }
+        const nodesField = isConnectionField(namedType)
+        if (nodesField) {
+          const subType = getNamedType(nodesField.type)
+          if (excludedTypes.includes(subType.toString())) return
+          return {
+            name: field.name,
+            type: subType.toString(),
+            fields: [field.name, { fields: { nodes: { fields: { id: {}, __typename: { alias: 'typeName' } } } } }],
+            path: 'nodes'
           }
-        ]
+        }
+
+        const nodeField = isConnectionEdgeField(namedType)
+        if (nodeField) {
+          const subType = getNamedType(nodeField.type)
+          if (excludedTypes.includes(subType.toString())) return
+          return {
+            name: field.name,
+            type: subType.toString(),
+            fields: [field.name, { fields: { node: { fields: { id: {}, __typename: { alias: 'typeName' } } } } }],
+            path: 'node'
+          }
+        }
       }
 
       if (isInterfaceType(namedType)) {
-        const subFields = namedType.getFields()
-        return [name, { fields: transformFields(subFields) }]
-      }
-      return [
-        name,
-        {
-          id: {},
-          __typename: {
-            alias: 'typeName'
+        if (isTypeSubTypeOf(schema, namedType, type)) {
+          return {
+            name: field.name,
+            type: namedType.toString(),
+            fields: [field.name, { fields: { id: {}, __typename: { alias: 'typeName' } } }],
+            path: ''
           }
         }
-      ]
+        const fields = FieldTransformer(schema, utils)(namedType).map(({ fields }) => fields)
+        return {
+          name: field.name,
+          type: namedType.toString(),
+          fields: [field.name, { fields: Object.fromEntries(fields) }],
+          path: ''
+        }
+      }
+
+      return
     })
-  )
+    .filter(f => !!f) as FieldTransform[]

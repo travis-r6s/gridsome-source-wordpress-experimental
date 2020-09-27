@@ -1,7 +1,7 @@
 // Packages
 import { createSchema } from './schema'
-import { reporter } from './utils'
-import { fetchData } from './data'
+import { excludedFields, excludedTypes, reporter } from './utils'
+import { importData } from './data'
 
 interface SourceOptions {
   typeName: string
@@ -20,13 +20,13 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
     const prefix = (name: string) => (scalarTypes.includes(name) ? name : `${typeName}${name}`)
 
-    const utils = { baseUrl, typeName, prefix, concurrency }
+    const utils = { baseUrl, typeName, prefix, concurrency, excluded: { fields: excludedFields, types: excludedTypes } }
 
     // Create Schema
     try {
       const schema = await createSchema(actions, utils)
 
-      await fetchData(schema, actions, utils)
+      await importData(schema, actions, utils)
     } catch (error) {
       reporter.error(error.message)
     }
