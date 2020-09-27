@@ -3,14 +3,9 @@ import { createSchemaTypes } from './create-types'
 import { fetchSchema } from './fetch-schema'
 import { renameType } from 'graphql-tools'
 import { filterSchema } from './filter-schema'
+import { Utils } from '../utils'
 
-export interface SchemaUtils {
-  baseUrl: string
-  typeName: string
-  prefix: Function
-}
-
-export const createSchema = async (actions: any, utils: SchemaUtils): Promise<GraphQLSchema> => {
+export const createSchema = async (actions: any, utils: Utils): Promise<GraphQLSchema> => {
   const { baseUrl, prefix } = utils
 
   const { schema, data } = await fetchSchema(baseUrl)

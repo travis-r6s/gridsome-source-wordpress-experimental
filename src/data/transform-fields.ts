@@ -1,6 +1,5 @@
 import { Field } from '@wheelroom/graphql-query-builder'
 import { getNamedType, GraphQLObjectType, isObjectType, isInterfaceType, isScalarType, isTypeSubTypeOf, GraphQLSchema } from 'graphql'
-import { excludedTypes } from '../schema/type-builder'
 import { Utils } from '../utils'
 
 export const isConnectionField = (type: GraphQLObjectType) => Object.values(type.getFields()).find(({ name }) => name === 'nodes')
@@ -42,7 +41,7 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
         const nodesField = isConnectionField(namedType)
         if (nodesField) {
           const subType = getNamedType(nodesField.type)
-          if (excludedTypes.includes(subType.toString())) return
+          if (utils.excluded.types.includes(subType.toString())) return
           return {
             name: field.name,
             type: subType.toString(),
@@ -54,7 +53,7 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
         const nodeField = isConnectionEdgeField(namedType)
         if (nodeField) {
           const subType = getNamedType(nodeField.type)
-          if (excludedTypes.includes(subType.toString())) return
+          if (utils.excluded.types.includes(subType.toString())) return
           return {
             name: field.name,
             type: subType.toString(),

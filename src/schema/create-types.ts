@@ -1,14 +1,14 @@
 import { isInterfaceType, isEnumType, isObjectType, isUnionType, GraphQLSchema } from 'graphql'
-import { SchemaUtils } from '.'
-import { reporter } from '../utils'
-import { TypeBuilder, transformEnums } from './type-builder'
+import { reporter, Utils } from '../utils'
+import { transformEnums } from './transform-fields'
+import { TypeBuilder } from './type-builder'
 
-export const createSchemaTypes = async (schema: GraphQLSchema, data: any, actions: any, { typeName }: SchemaUtils) => {
+export const createSchemaTypes = async (schema: GraphQLSchema, data: any, actions: any, utils: Utils) => {
   try {
     const typeMap = schema.getTypeMap()
-    const allTypes = Object.values(typeMap).filter(type => type.name.startsWith(typeName) && !type.name.includes('Root') && !type.name.includes('Connection'))
+    const allTypes = Object.values(typeMap).filter(type => type.name.startsWith(utils.typeName) && !type.name.includes('Root') && !type.name.includes('Connection'))
 
-    const buildType = TypeBuilder(actions.schema)
+    const buildType = TypeBuilder(actions.schema, utils)
 
     const schemaTypes = allTypes.map(type => {
       if (isInterfaceType(type)) return buildType.interface(type)

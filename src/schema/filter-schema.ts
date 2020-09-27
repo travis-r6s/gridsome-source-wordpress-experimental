@@ -1,9 +1,8 @@
 import { GraphQLSchema } from 'graphql'
 import { visitSchema, VisitSchemaKind, renameType } from 'graphql-tools'
-import { SchemaUtils } from '.'
-import { excludedTypes } from './type-builder'
+import { Utils, excludedTypes } from '../utils'
 
-export const filterSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) =>
+export const filterSchema = (schema: GraphQLSchema, { prefix, excluded }: Utils) =>
   visitSchema(schema, {
     [VisitSchemaKind.MUTATION]() {
       return null
@@ -16,7 +15,7 @@ export const filterSchema = (schema: GraphQLSchema, { prefix }: SchemaUtils) =>
       return renameType(type, prefix(type.name))
     },
     [VisitSchemaKind.INTERFACE_TYPE](type) {
-      if (excludedTypes.includes(type.name)) return null
+      if (excluded.types.includes(type.name)) return null
       if (type.name !== 'Node') return renameType(type, prefix(type.name))
       return type
     },
