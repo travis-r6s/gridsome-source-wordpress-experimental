@@ -9,7 +9,7 @@ import { SourceOptions } from '..'
 import path from 'path'
 
 export const downloadImages = async (data: Data, actions: any, { config, utils }: { config: SourceOptions; utils: Utils }) => {
-  const { original = false, folder = '.images/wordpress', cache = true } = typeof config.images === 'boolean' ? {} : config.images
+  const { original = true, folder = '.images/wordpress', cache = true } = typeof config.images === 'boolean' ? {} : config.images
   const { type, nodes } = data
 
   const imageStore = actions.getCollection(type)
