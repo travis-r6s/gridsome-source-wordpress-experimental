@@ -29,7 +29,7 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     try {
       const schema = await createSchema(actions, utils)
 
-      const data: Data = await importData(schema, actions, utils)
+      const data = await importData(schema, actions, utils)
 
       await contentActions(data, actions, { config, utils })
     } catch (error) {
