@@ -1,6 +1,6 @@
 {
   "name": "gridsome-source-wordpress-experimental",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Experimental source plugin for WordPress, using the WP GraphQL plugin. Inspired by the Gatsby equivalent.",
   "repository": "git@github.com:thetre97/gridsome-source-wordpress-experimental.git",
   "author": "Travis Reynolds <travis@travisreynolds.dev>",
@@ -11,6 +11,9 @@
     "dist",
     "src"
   ],
+  "engines": {
+    "node": ">=12"
+  },
   "scripts": {
     "develop": "tsdx watch --target node --format cjs",
     "build": "tsdx build --target node --format cjs",
