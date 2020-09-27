@@ -27,9 +27,9 @@
     }
   },
   "dependencies": {
-    "@wheelroom/graphql-query-builder": "^1.4.7",
     "consola": "^2.15.0",
     "got": "^11.7.0",
+    "gql-query-builder": "^3.5.0",
     "graphql": "^15.3.0",
     "graphql-tools": "^6.2.3",
     "p-map": "^4.0.0"

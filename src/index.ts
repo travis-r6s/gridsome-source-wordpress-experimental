@@ -20,7 +20,7 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
     const prefix = (name: string) => (scalarTypes.includes(name) ? name : `${typeName}${name}`)
 
-    const utils = { baseUrl, typeName, prefix, concurrency, excluded: { fields: excludedFields, types: excludedTypes } }
+    const utils = { baseUrl, typeName, prefix, concurrency, perPage: 100, excluded: { fields: excludedFields, types: excludedTypes } }
 
     // Create Schema
     try {

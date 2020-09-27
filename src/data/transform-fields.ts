@@ -1,4 +1,3 @@
-import { Field } from '@wheelroom/graphql-query-builder'
 import { getNamedType, GraphQLObjectType, isObjectType, isInterfaceType, isScalarType, isTypeSubTypeOf, GraphQLSchema } from 'graphql'
 import { Utils } from '../utils'
 
@@ -8,7 +7,7 @@ export const isConnectionEdgeField = (type: GraphQLObjectType) => Object.values(
 export interface FieldTransform {
   name: string
   type: string
-  fields: [string, Field]
+  fields: [string, any[]]
   path: string
 }
 
@@ -32,7 +31,7 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
         return {
           name: field.name,
           type: field.type.toString(),
-          fields: [field.name, {}],
+          fields: [field.name],
           path: ''
         }
       }
@@ -45,7 +44,7 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
           return {
             name: field.name,
             type: subType.toString(),
-            fields: [field.name, { fields: { nodes: { fields: { id: {}, __typename: { alias: 'typeName' } } } } }],
+            fields: [{ [field.name]: [{ nodes: ['id', '__typename'] }] }],
             path: 'nodes'
           }
         }
@@ -57,7 +56,7 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
           return {
             name: field.name,
             type: subType.toString(),
-            fields: [field.name, { fields: { node: { fields: { id: {}, __typename: { alias: 'typeName' } } } } }],
+            fields: [{ [field.name]: [{ node: ['id', '__typename'] }] }],
             path: 'node'
           }
         }
@@ -68,15 +67,16 @@ export const FieldTransformer = (schema: GraphQLSchema, utils: Utils) => (type: 
           return {
             name: field.name,
             type: namedType.toString(),
-            fields: [field.name, { fields: { id: {}, __typename: { alias: 'typeName' } } }],
+            fields: [{ [field.name]: ['id', '__typename'] }],
             path: ''
           }
         }
         const fields = FieldTransformer(schema, utils)(namedType).map(({ fields }) => fields)
+
         return {
           name: field.name,
           type: namedType.toString(),
-          fields: [field.name, { fields: Object.fromEntries(fields) }],
+          fields: [{ [field.name]: fields.flat() }],
           path: ''
         }
       }

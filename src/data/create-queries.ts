@@ -1,7 +1,7 @@
-import { graphqlQueryBuilder } from '@wheelroom/graphql-query-builder'
 import { isNonNullType, getNamedType, isObjectType, GraphQLObjectType, GraphQLFieldMap } from 'graphql'
 import { FieldTransformer, FieldTransformParent, isConnectionField } from './transform-fields'
 import { reporter, Utils } from '../utils'
+import { query as queryBuilder } from 'gql-query-builder'
 
 export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTransformer: FieldTransformer, utils: Utils) =>
   Object.values(queryFields)
@@ -18,8 +18,16 @@ export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTrans
         if (nodesField) {
           const type = getNamedType(nodesField.type) as GraphQLObjectType
           const fields = fieldTransformer(type)
-          const queryFields = Object.fromEntries(fields.map(({ fields }) => fields))
-          const query = graphqlQueryBuilder({ operationType: 'query', fields: { [field.name]: { fields: { nodes: { fields: queryFields } } } } })
+
+          const queryFields = fields.flatMap(({ fields }) => fields)
+          const { query } = queryBuilder({
+            operation: field.name,
+            fields: [{ nodes: queryFields }],
+            variables: {
+              first: { value: utils.perPage, required: true },
+              after: ''
+            }
+          })
 
           return {
             name: field.name,
@@ -31,8 +39,16 @@ export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTrans
         }
 
         const fields = fieldTransformer(field.type)
-        const queryFields = Object.fromEntries(fields.map(({ fields }) => fields))
-        const query = graphqlQueryBuilder({ operationType: 'query', fields: { [field.name]: { fields: queryFields } } })
+
+        const queryFields = fields.flatMap(({ fields }) => fields)
+        const { query } = queryBuilder({
+          operation: field.name,
+          fields: queryFields,
+          variables: {
+            first: { value: utils.perPage, required: true },
+            after: ''
+          }
+        })
 
         return {
           name: field.name,

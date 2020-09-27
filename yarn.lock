@@ -1788,11 +1788,6 @@
     "@typescript-eslint/types" "4.1.0"
     eslint-visitor-keys "^2.0.0"
 
-"@wheelroom/graphql-query-builder@^1.4.7":
-  version "1.4.7"
-  resolved "https://registry.yarnpkg.com/@wheelroom/graphql-query-builder/-/graphql-query-builder-1.4.7.tgz#61ab9873d5ba219faf5344f29668b551c97a70cf"
-  integrity sha512-Anx3FkAtBTLxw/ath4BPOhXVn6vHBh8wpZ5DSZddjRhFQLEF/88qImAXtc8H9kVPb+CMsq2tSNwBQcgnjiL8IQ==
-
 "@wry/context@^0.5.2":
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/@wry/context/-/context-0.5.2.tgz#f2a5d5ab9227343aa74c81e06533c1ef84598ec7"
@@ -3822,6 +3817,11 @@ got@^11.7.0:
     lowercase-keys "^2.0.0"
     p-cancelable "^2.0.0"
     responselike "^2.0.0"
+
+gql-query-builder@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/gql-query-builder/-/gql-query-builder-3.5.0.tgz#a3f686250e9fde4e38c8d6f109ecd6d67373d21c"
+  integrity sha512-OQz+YjYVeA9n7o1PkRY2+MYIviXAeSbyDoUJnyHlgAfhIyOsNTsO4V2m9GqvGAm28NwvfZ24BAqMTZvRi9rVIQ==
 
 graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4:
   version "4.2.4"

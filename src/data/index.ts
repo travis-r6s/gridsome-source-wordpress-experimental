@@ -15,8 +15,6 @@ export const importData = async (schema: GraphQLSchema, actions: any, utils: Uti
   const data = await fetchData(queries, utils)
 
   for (const { type, nodes } of data) {
-    if (!type) continue
-
     const collection = actions.getCollection(type)
     if (!collection) {
       reporter.warn(`No collection for type: ${type}`)

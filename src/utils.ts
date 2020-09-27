@@ -7,6 +7,7 @@ export interface Utils {
   typeName: string
   prefix: Function
   concurrency: number
+  perPage: number
   excluded: {
     fields: string[]
     types: string[]
