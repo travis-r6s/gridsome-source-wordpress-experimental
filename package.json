@@ -11,9 +11,6 @@
     "dist",
     "src"
   ],
-  "engines": {
-    "node": ">=12"
-  },
   "scripts": {
     "develop": "tsdx watch --target node --format cjs",
     "build": "tsdx build --target node --format cjs",
