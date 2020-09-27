@@ -22,7 +22,14 @@ export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTrans
           const queryFields = fields.flatMap(({ fields }) => fields)
           const { query } = queryBuilder({
             operation: field.name,
-            fields: [{ nodes: queryFields }],
+            fields: [
+              {
+                pageInfo: ['hasNextPage', 'endCursor']
+              },
+              {
+                nodes: queryFields
+              }
+            ],
             variables: {
               first: { value: utils.perPage, required: true },
               after: ''
@@ -43,11 +50,7 @@ export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTrans
         const queryFields = fields.flatMap(({ fields }) => fields)
         const { query } = queryBuilder({
           operation: field.name,
-          fields: queryFields,
-          variables: {
-            first: { value: utils.perPage, required: true },
-            after: ''
-          }
+          fields: queryFields
         })
 
         return {
