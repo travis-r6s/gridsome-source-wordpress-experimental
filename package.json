@@ -33,6 +33,8 @@
     "gql-query-builder": "^3.5.0",
     "graphql": "^15.3.0",
     "graphql-tools": "^6.2.3",
+    "hirestime": "^6.1.0",
+    "ora": "^5.1.0",
     "p-map": "^4.0.0"
   },
   "devDependencies": {

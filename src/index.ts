@@ -1,6 +1,6 @@
 // Packages
 import { createSchema } from './schema'
-import { excludedFields, excludedTypes, reporter } from './utils'
+import { excludedFields, excludedTypes, reporter, createTimer } from './utils'
 import { importData } from './data'
 import { contentActions } from './content'
 
@@ -18,12 +18,15 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
 
   if (!baseUrl) throw new Error('Missing the `baseUrl` config option.')
   if (!typeName) throw new Error('Missing the `typeName` config option.')
+  const timer = createTimer(log)
 
   api.loadSource(async (actions: any) => {
+    const runtimeTimer = timer()
+
     const scalarTypes = ['String', 'Int', 'Float', 'Boolean', 'ID']
     const prefix = (name: string) => (scalarTypes.includes(name) ? name : `${typeName}${name}`)
 
-    const utils = { baseUrl, typeName, prefix, concurrency, perPage: 100, excluded: { fields: excludedFields, types: excludedTypes } }
+    const utils = { baseUrl, typeName, prefix, concurrency, log, timer, perPage: 100, excluded: { fields: excludedFields, types: excludedTypes } }
 
     // Create Schema
     try {
@@ -37,6 +40,7 @@ const GridsomeSourceWordPress = (api: any, config: SourceOptions) => {
     }
 
     if (log) reporter.success('Finished adding WordPress schema')
+    runtimeTimer.log('Finished adding schema & data in %s')
   })
 }
 

@@ -5,6 +5,7 @@ import { TypeBuilder } from './type-builder'
 
 export const createSchemaTypes = async (schema: GraphQLSchema, data: any, actions: any, utils: Utils) => {
   try {
+    const createSchemaTypesTimer = utils.timer()
     const typeMap = schema.getTypeMap()
     const allTypes = Object.values(typeMap).filter(type => type.name.startsWith(utils.typeName) && !type.name.includes('Root') && !type.name.includes('Connection'))
 
@@ -20,6 +21,8 @@ export const createSchemaTypes = async (schema: GraphQLSchema, data: any, action
     // We need to transform all enums too
     const enums = data.__schema.types.filter(({ kind }: { kind: string; name: string }) => kind === 'ENUM')
     const enumTypes = transformEnums(enums, actions)
+
+    createSchemaTypesTimer.log('Created Schema types in %s')
 
     return [...schemaTypes, ...enumTypes]
   } catch (error) {
