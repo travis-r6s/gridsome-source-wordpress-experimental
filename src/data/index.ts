@@ -14,6 +14,7 @@ export const importData = async (schema: GraphQLSchema, actions: any, utils: Uti
   const queries = createQueries(queryFields, fieldTransfomer, utils)
   const data = await fetchData(queries, utils)
 
+  const addNodesTimer = utils.timer()
   for (const { type, nodes } of data) {
     const collection = actions.getCollection(type)
     if (!collection) {
@@ -24,6 +25,7 @@ export const importData = async (schema: GraphQLSchema, actions: any, utils: Uti
       collection.addNode(node)
     }
   }
+  addNodesTimer.log('Added all data to store in %s')
 
   return data
 }

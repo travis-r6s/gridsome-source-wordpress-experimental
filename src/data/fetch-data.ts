@@ -1,5 +1,6 @@
 import got from 'got/dist/source'
 import pMap from 'p-map'
+import ora from 'ora'
 import { reporter, Utils } from '../utils'
 import { FieldTransformParent } from './transform-fields'
 
@@ -10,6 +11,9 @@ export interface Data {
 }
 
 export const fetchData = async (queries: FieldTransformParent[], utils: Utils): Promise<Data[]> => {
+  const fetchDataTimer = utils.timer()
+  const spinner = ora('Fetching WordPress data').start()
+
   const data = await pMap(
     queries,
     async (field: FieldTransformParent) => {
@@ -27,7 +31,9 @@ export const fetchData = async (queries: FieldTransformParent[], utils: Utils): 
               const { data, errors } = response.body
               if (!errors) return data[name].nodes
 
-              reporter.error(`Error when fetching ${name}: ${errors[0].message}`)
+              const [error] = errors
+              reporter.error(`Error when fetching ${name}: ${error.message}`)
+              if (utils.log) reporter.info(JSON.stringify(error, null, 2))
               return []
             },
             paginate: (response: any, _allItems, currentItems) => {
@@ -46,7 +52,9 @@ export const fetchData = async (queries: FieldTransformParent[], utils: Utils): 
           responseType: 'json'
         })) as any
         if (result.errors) {
-          reporter.error(`Error when getting ${name}: ${result.errors[0].message}`)
+          const [error] = result.errors
+          reporter.error(`Error when getting ${name}: ${error.message}`)
+          if (utils.log) reporter.info(JSON.stringify(error, null, 2))
           return { type: '', nodes: [] }
         }
 
@@ -86,6 +94,9 @@ export const fetchData = async (queries: FieldTransformParent[], utils: Utils): 
     },
     { concurrency: utils.concurrency }
   )
+
+  spinner.stop()
+  fetchDataTimer.log('Fetched all data in %s')
 
   return data.filter(d => !!d) as Data[]
 }

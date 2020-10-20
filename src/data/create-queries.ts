@@ -3,8 +3,10 @@ import { FieldTransformer, FieldTransformParent, isConnectionField } from './tra
 import { reporter, Utils } from '../utils'
 import { query as queryBuilder } from 'gql-query-builder'
 
-export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTransformer: FieldTransformer, utils: Utils) =>
-  Object.values(queryFields)
+export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTransformer: FieldTransformer, utils: Utils) => {
+  const createQueriesTimer = utils.timer()
+
+  const queries = Object.values(queryFields)
     .map((field): FieldTransformParent | undefined => {
       // If we have a non null arg, or an ID arg, then we can't use this field
       const hasNonNullType = field.args.some(({ type }) => isNonNullType(type))
@@ -66,3 +68,8 @@ export const createQueries = (queryFields: GraphQLFieldMap<any, any>, fieldTrans
       return
     })
     .filter(f => !!f) as FieldTransformParent[]
+
+  createQueriesTimer.log('Created all type queries in %s')
+
+  return queries
+}
